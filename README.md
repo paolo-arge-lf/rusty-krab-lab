@@ -1,8 +1,12 @@
 # Rusty Krab Lab
 
-Wear your goggles this is an area with active experiments to explore Strange New Worlds
+Wear your :construction_worker: - active experiments ongoing.
 
 ---
+
+## 3D :rocket:
+
+Powered by Markdown-STL (Stereolithography), see the [STL (Stereolithography) File Format](<https://en.wikipedia.org/wiki/STL_(file_format)>).
 
 ```stl
 solid space_shuttle_launch_stack
@@ -6088,6 +6092,8 @@ endsolid space_shuttle_launch_stack
 ---
 
 ## Software Development Life Cycle (SDLC)
+
+Powered by Markdown-Mermaid, see the [Mermaid documentation](https://mermaid.js.org/#/).
 
 ```mermaid
 graph TD
