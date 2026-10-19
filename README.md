@@ -1,6 +1,6 @@
 # Rusty Krab Lab
 
-Caution, wear your :construction_worker: software experiment in progress.
+> :construction_worker: CAUTION SOFTWARE EXPERIMENT IN PROGRESS :construction_worker:
 
 ---
 
