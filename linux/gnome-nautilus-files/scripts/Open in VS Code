@@ -1,0 +1,19 @@
+#!/bin/bash
+set -euo pipefail
+
+# Get the first selected target path
+target="$(printf '%s\n' "$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS" | head -n1)"
+
+# If nothing is selected, default to the current active folder
+if [ -z "$target" ]; then
+    target="$NAUTILUS_SCRIPT_CURRENT_URI"
+    # Remove the 'file://' prefix if present
+    target="${target#file://}"
+fi
+
+# If it's a directory, open it. If it's a file, open its parent folder.
+if [ -d "$target" ]; then
+    exec code "$target"
+else
+    exec code "$(dirname "$target")"
+fi
