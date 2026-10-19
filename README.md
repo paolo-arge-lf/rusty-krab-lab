@@ -4,7 +4,7 @@ Wear your :construction_worker: - active experiments ongoing.
 
 ---
 
-## 3D :rocket:
+## :rocket: Space Shuttle Launch Stack 3D-STL
 
 Powered by Markdown-STL (Stereolithography), see the [STL (Stereolithography) File Format](<https://en.wikipedia.org/wiki/STL_(file_format)>).
 
