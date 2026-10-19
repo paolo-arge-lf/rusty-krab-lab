@@ -1,6 +1,6 @@
 # Rusty Krab Lab
 
-Wear your :construction_worker: - active experiments ongoing.
+Caution, wear your :construction_worker: software experiment in progress.
 
 ---
 
