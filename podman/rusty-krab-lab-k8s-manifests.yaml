@@ -1,0 +1,219 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: ollama
+  name: ollama
+spec:
+  ports:
+    - name: "11434"
+      port: 11434
+      targetPort: 11434
+  selector:
+    io.kompose.service: ollama
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: open-webui
+  name: open-webui
+spec:
+  ports:
+    - name: "8080"
+      port: 8080
+      targetPort: 8080
+  selector:
+    io.kompose.service: open-webui
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: ollama
+  name: ollama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: ollama
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: ollama
+    spec:
+      containers:
+        - name: ollama
+          image: docker.io/ollama/ollama:latest
+          imagePullPolicy: Always
+          # securityContext:
+          #   privileged: true # Often required for raw Vulkan device rendering inside containers
+          env:
+            - name: GGML_VK_VISIBLE_DEVICES
+              value: "0"
+            - name: HIP_VISIBLE_DEVICES
+              value: "-1"
+            - name: GGML_VK_ALLOC_SIZE
+              value: "1073741824" # 1GB Vulkan memory allocation for GGML (adjust based on your GPU)
+            - name: OLLAMA_HOST
+              value: 0.0.0.0:11434
+            - name: OLLAMA_IGPU_ENABLE
+              value: "1"
+            - name: OLLAMA_VULKAN
+              value: "1"
+            - name: OLLAMA_KEEP_ALIVE
+              value: "1h"
+            - name: OLLAMA_FLASH_ATTENTION
+              value: "1"
+          resources:
+            requests:
+              cpu: "2000m" # Reserve 2 CPU cores minimum
+              memory: "4Gi" # Reserve 4GB RAM minimum
+            limits:
+              cpu: "10000m" # Scale up to 10 CPU cores max
+              memory: "16Gi" # Hard cap at 16GB RAM (adjust based on your largest model size)
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 11434
+            failureThreshold: 5
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+          ports:
+            - containerPort: 11434
+              hostPort: 11434
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root/.ollama
+              name: ollama-data
+            - mountPath: /dev/dri
+              name: dev-dri
+            - mountPath: /dev/kfd
+              name: dev-kfd
+      restartPolicy: Always
+      volumes:
+        - name: ollama-data
+          persistentVolumeClaim:
+            claimName: ollama-data
+        - name: dev-dri
+          hostPath:
+            path: /dev/dri # Passes through host GPU drivers for Vulkan
+        - name: dev-kfd
+          hostPath:
+            path: /dev/kfd # Necessary if running AMD integrated graphics
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: ollama-data
+  name: ollama-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 80Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    io.kompose.service: ollama-model-puller
+  name: ollama-model-puller
+spec:
+  template:
+    metadata:
+      labels:
+        io.kompose.service: ollama-model-puller
+    spec:
+      containers:
+        - name: ollama-model-puller
+          image: docker.io/curlimages/curl:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          command:
+            - /bin/sh
+          args:
+            - -c
+            - |
+              echo 'Waiting for Ollama API...';
+              until curl -s http://ollama:11434/api/tags > /dev/null; do
+                sleep 5;
+              done;
+              echo 'API ready. Triggering model pulls...';
+              curl -X POST http://ollama:11434/api/pull -d '{"model": "gemma4:e4b"}';
+              curl -X POST http://ollama:11434/api/pull -d '{"model": "gemma4:e2b"}';
+      restartPolicy: OnFailure
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: open-webui
+  name: open-webui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: open-webui
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: open-webui
+    spec:
+      containers:
+        - name: open-webui
+          image: ghcr.io/open-webui/open-webui:latest
+          imagePullPolicy: Always
+          env:
+            - name: ENABLE_SIGNUP
+              value: "true"
+            - name: OLLAMA_BASE_URL
+              value: http://ollama:11434
+            - name: WEBUI_SECRET_KEY
+              value: 44510555264d11b00c42926c586a6f6bd8deef33952c854e36ab72045a70afe2
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "8000m"
+              memory: "4Gi" # High upper bound to protect vector indexing from crashing
+          ports:
+            - containerPort: 8080
+              hostPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /app/backend/data
+              name: open-webui-data
+      restartPolicy: Always
+      volumes:
+        - name: open-webui-data
+          persistentVolumeClaim:
+            claimName: open-webui-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: open-webui-data
+  name: open-webui-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
