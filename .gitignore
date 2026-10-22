@@ -26,5 +26,4 @@ rustc-ice-*.txt
 # Project-local FreeCAD MCP environment
 /FreeCad/.venv/
 /FreeCad/.deps/
-FreeCad/FreeCAD-3D-Pencil-Printable.20261020-183211.FCBak
-FreeCad/Mug.20261020-190949.FCBak
+*.FCBak
