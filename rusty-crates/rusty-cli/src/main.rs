@@ -1,6 +1,6 @@
 //https://www.youtube.com/watch?v=5UA9UWWAagc&t=6s
 use clap::Parser;
-use jiff::DateTime;
+use jiff::Zoned;
 use owo_colors::OwoColorize;
 use std::{
     fs,
@@ -69,11 +69,10 @@ fn get_files(path: &Path) -> Vec<FileEntry> {
                             len_bytes: file_meta.len(),
                             modified: file_meta
                                 .modified()
-                                .map(|time| {
-                                    let datetime: jiff::DateTime<jiff::Local> = time.into();
-                                    datetime.format("%Y-%m-%d %H:%M:%S").to_string()
-                                })
-                                .unwrap_or_else(|_| "Unknown".to_string()),
+                                .ok()
+                                .and_then(|time| Zoned::try_from(time).ok())
+                                .map(|datetime| datetime.strftime("%Y-%m-%d %H:%M:%S").to_string())
+                                .unwrap_or_else(|| "Unknown".to_string()),
                         });
                     }
                 }
