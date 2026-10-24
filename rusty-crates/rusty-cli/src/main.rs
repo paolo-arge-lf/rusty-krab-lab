@@ -2,7 +2,6 @@
 use clap::Parser;
 use owo_colors::OwoColorize;
 use std::{
-    f32::consts::E,
     fs,
     path::{Path, PathBuf},
 };
