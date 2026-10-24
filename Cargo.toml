@@ -1,4 +1,5 @@
 # /Cargo.toml
+# Rust community’s crate registry: https://crates.io/
 [workspace]
 resolver = "3"
 members = [
@@ -7,5 +8,11 @@ members = [
 
 # Enforce unified dependency versions across the workspace
 [workspace.dependencies]
+# Command-line parser
 clap = { version = "4.6", features = ["derive"] }
+# Terminal colors
 owo-colors = "4.4" 
+# Macros and traits for working with enums 
+strum = { version = "0.28", features = ["derive"] }
+# A date-time library
+jiff = { version = "0.1", features = ["serde"] }

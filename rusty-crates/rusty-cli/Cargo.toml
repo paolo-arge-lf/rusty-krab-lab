@@ -6,3 +6,5 @@ edition = "2024"
 [dependencies]
 clap = { workspace = true }
 owo-colors  = { workspace = true }
+strum  = { workspace = true }
+jiff= { workspace = true }
