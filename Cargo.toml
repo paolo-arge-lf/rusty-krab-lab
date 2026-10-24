@@ -8,3 +8,4 @@ members = [
 # Enforce unified dependency versions across the workspace
 [workspace.dependencies]
 clap = { version = "4.6", features = ["derive"] }
+owo-colors = "4.4" 
